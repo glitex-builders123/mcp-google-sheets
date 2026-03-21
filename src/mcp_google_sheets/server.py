@@ -10,6 +10,10 @@ import sys
 from typing import List, Dict, Any, Optional, Union
 import json
 from dataclasses import dataclass
+
+# Type alias for cell values – gives OpenAI-compatible JSON schemas
+# (every array level has an explicit "items" definition)
+CellValue = Union[str, int, float, bool, None]
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
@@ -314,7 +318,7 @@ def get_sheet_formulas(spreadsheet_id: str,
 def update_cells(spreadsheet_id: str,
                 sheet: str,
                 range: str,
-                data: List[List[Any]],
+                data: List[List[CellValue]],
                 ctx: Context = None) -> Dict[str, Any]:
     """
     Update cells in a Google Spreadsheet.
@@ -357,7 +361,7 @@ def update_cells(spreadsheet_id: str,
 )
 def batch_update_cells(spreadsheet_id: str,
                        sheet: str,
-                       ranges: Dict[str, List[List[Any]]],
+                       ranges: Dict[str, List[List[CellValue]]],
                        ctx: Context = None) -> Dict[str, Any]:
     """
     Batch update multiple ranges in a Google Spreadsheet.
