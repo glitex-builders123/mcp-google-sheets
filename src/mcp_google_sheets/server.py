@@ -361,7 +361,8 @@ def update_cells(spreadsheet_id: str,
 )
 def batch_update_cells(spreadsheet_id: str,
                        sheet: str,
-                       ranges: Dict[str, List[List[CellValue]]],
+                       ranges: List[str],
+                       values: List[List[List[CellValue]]],
                        ctx: Context = None) -> Dict[str, Any]:
     """
     Batch update multiple ranges in a Google Spreadsheet.
@@ -369,8 +370,9 @@ def batch_update_cells(spreadsheet_id: str,
     Args:
         spreadsheet_id: The ID of the spreadsheet (found in the URL)
         sheet: The name of the sheet
-        ranges: Dictionary mapping range strings to 2D arrays of values
-               e.g., {'A1:B2': [[1, 2], [3, 4]], 'D1:E2': [['a', 'b'], ['c', 'd']]}
+        ranges: List of cell ranges in A1 notation, e.g., ['A1:B2', 'D1:E2']
+        values: List of 2D arrays of values corresponding to each range,
+                e.g., [[[1, 2], [3, 4]], [['a', 'b'], ['c', 'd']]]
     
     Returns:
         Result of the batch update operation
@@ -379,11 +381,11 @@ def batch_update_cells(spreadsheet_id: str,
     
     # Prepare the batch update request
     data = []
-    for range_str, values in ranges.items():
+    for range_str, range_values in zip(ranges, values):
         full_range = f"{sheet}!{range_str}"
         data.append({
             'range': full_range,
-            'values': values
+            'values': range_values
         })
     
     batch_body = {
