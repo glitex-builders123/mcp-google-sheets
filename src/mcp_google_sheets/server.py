@@ -218,7 +218,7 @@ def tool(annotations: Optional[ToolAnnotations] = None):
 )
 def get_sheet_data(spreadsheet_id: str,
                    sheet: str,
-                   range: Optional[str] = None,
+                   range: str = "",
                    include_grid_data: bool = False,
                    ctx: Context = None) -> Dict[str, Any]:
     """
@@ -227,7 +227,7 @@ def get_sheet_data(spreadsheet_id: str,
     Args:
         spreadsheet_id: The ID of the spreadsheet (found in the URL)
         sheet: The name of the sheet
-        range: Optional cell range in A1 notation (e.g., 'A1:C10'). If not provided, gets all data.
+        range: Cell range in A1 notation (e.g., 'A1:C10'). If empty, gets all data.
         include_grid_data: If True, includes cell formatting and other metadata in the response.
             Note: Setting this to True will significantly increase the response size and token usage
             when parsing the response, as it includes detailed cell formatting information.
@@ -277,7 +277,7 @@ def get_sheet_data(spreadsheet_id: str,
 )
 def get_sheet_formulas(spreadsheet_id: str,
                        sheet: str,
-                       range: Optional[str] = None,
+                       range: str = "",
                        ctx: Context = None) -> List[List[Any]]:
     """
     Get formulas from a specific sheet in a Google Spreadsheet.
@@ -285,7 +285,7 @@ def get_sheet_formulas(spreadsheet_id: str,
     Args:
         spreadsheet_id: The ID of the spreadsheet (found in the URL)
         sheet: The name of the sheet
-        range: Optional cell range in A1 notation (e.g., 'A1:C10'). If not provided, gets all formulas from the sheet.
+        range: Cell range in A1 notation (e.g., 'A1:C10'). If empty, gets all formulas from the sheet.
     
     Returns:
         A 2D array of the sheet formulas.
@@ -411,7 +411,7 @@ def batch_update_cells(spreadsheet_id: str,
 def add_rows(spreadsheet_id: str,
              sheet: str,
              count: int,
-             start_row: Optional[int] = None,
+             start_row: int = -1,
              ctx: Context = None) -> Dict[str, Any]:
     """
     Add rows to a sheet in a Google Spreadsheet.
@@ -420,7 +420,7 @@ def add_rows(spreadsheet_id: str,
         spreadsheet_id: The ID of the spreadsheet (found in the URL)
         sheet: The name of the sheet
         count: Number of rows to add
-        start_row: 0-based row index to start adding. If not provided, adds at the beginning.
+        start_row: 0-based row index to start adding. If -1 or not provided, adds at the beginning.
     
     Returns:
         Result of the operation
@@ -447,10 +447,10 @@ def add_rows(spreadsheet_id: str,
                     "range": {
                         "sheetId": sheet_id,
                         "dimension": "ROWS",
-                        "startIndex": start_row if start_row is not None else 0,
-                        "endIndex": (start_row if start_row is not None else 0) + count
+                        "startIndex": start_row if start_row >= 0 else 0,
+                        "endIndex": (start_row if start_row >= 0 else 0) + count
                     },
-                    "inheritFromBefore": start_row is not None and start_row > 0
+                    "inheritFromBefore": start_row > 0
                 }
             }
         ]
@@ -474,7 +474,7 @@ def add_rows(spreadsheet_id: str,
 def add_columns(spreadsheet_id: str,
                 sheet: str,
                 count: int,
-                start_column: Optional[int] = None,
+                start_column: int = -1,
                 ctx: Context = None) -> Dict[str, Any]:
     """
     Add columns to a sheet in a Google Spreadsheet.
@@ -483,7 +483,7 @@ def add_columns(spreadsheet_id: str,
         spreadsheet_id: The ID of the spreadsheet (found in the URL)
         sheet: The name of the sheet
         count: Number of columns to add
-        start_column: 0-based column index to start adding. If not provided, adds at the beginning.
+        start_column: 0-based column index to start adding. If -1 or not provided, adds at the beginning.
     
     Returns:
         Result of the operation
@@ -510,10 +510,10 @@ def add_columns(spreadsheet_id: str,
                     "range": {
                         "sheetId": sheet_id,
                         "dimension": "COLUMNS",
-                        "startIndex": start_column if start_column is not None else 0,
-                        "endIndex": (start_column if start_column is not None else 0) + count
+                        "startIndex": start_column if start_column >= 0 else 0,
+                        "endIndex": (start_column if start_column >= 0 else 0) + count
                     },
-                    "inheritFromBefore": start_column is not None and start_column > 0
+                    "inheritFromBefore": start_column > 0
                 }
             }
         ]
@@ -880,14 +880,14 @@ def get_spreadsheet_info(spreadsheet_id: str) -> str:
         destructiveHint=True,
     ),
 )
-def create_spreadsheet(title: str, folder_id: Optional[str] = None, ctx: Context = None) -> Dict[str, Any]:
+def create_spreadsheet(title: str, folder_id: str = "", ctx: Context = None) -> Dict[str, Any]:
     """
     Create a new Google Spreadsheet.
     
     Args:
         title: The title of the new spreadsheet
-        folder_id: Optional Google Drive folder ID where the spreadsheet should be created.
-                  If not provided, uses the configured default folder or creates in root.
+        folder_id: Google Drive folder ID where the spreadsheet should be created.
+                  If empty, uses the configured default folder or creates in root.
     
     Returns:
         Information about the newly created spreadsheet including its ID
@@ -979,14 +979,14 @@ def create_sheet(spreadsheet_id: str,
         readOnlyHint=True,
     ),
 )
-def list_spreadsheets(folder_id: Optional[str] = None, ctx: Context = None) -> List[Dict[str, str]]:
+def list_spreadsheets(folder_id: str = "", ctx: Context = None) -> List[Dict[str, str]]:
     """
     List all spreadsheets in the specified Google Drive folder.
     If no folder is specified, uses the configured default folder or lists from 'My Drive'.
     
     Args:
-        folder_id: Optional Google Drive folder ID to search in.
-                  If not provided, uses the configured default folder or searches 'My Drive'.
+        folder_id: Google Drive folder ID to search in.
+                  If empty, uses the configured default folder or searches 'My Drive'.
     
     Returns:
         List of spreadsheets with their ID and title
@@ -1109,14 +1109,14 @@ def share_spreadsheet(spreadsheet_id: str,
         readOnlyHint=True,
     ),
 )
-def list_folders(parent_folder_id: Optional[str] = None, ctx: Context = None) -> List[Dict[str, str]]:
+def list_folders(parent_folder_id: str = "", ctx: Context = None) -> List[Dict[str, str]]:
     """
     List all folders in the specified Google Drive folder.
     If no parent folder is specified, lists folders from 'My Drive' root.
     
     Args:
-        parent_folder_id: Optional Google Drive folder ID to search within.
-                         If not provided, searches the root of 'My Drive'.
+        parent_folder_id: Google Drive folder ID to search within.
+                         If empty, searches the root of 'My Drive'.
     
     Returns:
         List of folders with their ID, name, and parent information
@@ -1317,7 +1317,7 @@ def _get_sheet_id(sheets_service: Any, spreadsheet_id: str, sheet_name: str) -> 
 )
 def find_in_spreadsheet(spreadsheet_id: str,
                         query: str,
-                        sheet: Optional[str] = None,
+                        sheet: str = "",
                         case_sensitive: bool = False,
                         max_results: int = 50,
                         ctx: Context = None) -> List[Dict[str, Any]]:
@@ -1327,7 +1327,7 @@ def find_in_spreadsheet(spreadsheet_id: str,
     Args:
         spreadsheet_id: The ID of the spreadsheet (found in the URL)
         query: The text to search for in cell values
-        sheet: Optional sheet name to search in. If not provided, searches all sheets.
+        sheet: Sheet name to search in. If empty, searches all sheets.
         case_sensitive: Whether the search should be case-sensitive (default False)
         max_results: Maximum number of results to return (default 50)
 
@@ -1347,7 +1347,7 @@ def find_in_spreadsheet(spreadsheet_id: str,
         sheets_to_search = []
         for s in spreadsheet.get('sheets', []):
             sheet_title = s.get('properties', {}).get('title')
-            if sheet is None or sheet_title == sheet:
+            if not sheet or sheet_title == sheet:
                 sheets_to_search.append(sheet_title)
 
         if not sheets_to_search:
@@ -1487,9 +1487,9 @@ def add_chart(spreadsheet_id: str,
               sheet: str,
               chart_type: str,
               data_range: str,
-              title: Optional[str] = None,
-              x_axis_label: Optional[str] = None,
-              y_axis_label: Optional[str] = None,
+              title: str = "",
+              x_axis_label: str = "",
+              y_axis_label: str = "",
               position_x: int = 0,
               position_y: int = 0,
               width: int = 600,
@@ -1515,9 +1515,9 @@ def add_chart(spreadsheet_id: str,
                    - HISTOGRAM: Histogram
         data_range: A1 notation range for chart data (e.g., 'A1:C10'). 
                    The first row is typically treated as headers.
-        title: Optional title for the chart
-        x_axis_label: Optional label for the X axis (bottom axis)
-        y_axis_label: Optional label for the Y axis (left axis)
+        title: Title for the chart (empty string for no title)
+        x_axis_label: Label for the X axis (bottom axis, empty string for no label)
+        y_axis_label: Label for the Y axis (left axis, empty string for no label)
         position_x: Horizontal position offset in pixels from the top-left corner (default: 0)
         position_y: Vertical position offset in pixels from the top-left corner (default: 0)
         width: Width of the chart in pixels (default: 600)
