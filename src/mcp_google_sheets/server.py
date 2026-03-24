@@ -258,12 +258,16 @@ def get_sheet_data(spreadsheet_id: str,
             range=full_range
         ).execute()
         
+        values = values_result.get('values', [])
+        total_rows = len(values) - 1 if values else 0  # exclude header
+
         # Format the response to match expected structure
         result = {
             'spreadsheetId': spreadsheet_id,
+            'total_rows': total_rows,
             'valueRanges': [{
                 'range': full_range,
-                'values': values_result.get('values', [])
+                'values': values
             }]
         }
 
@@ -1307,6 +1311,44 @@ def _get_sheet_id(sheets_service: Any, spreadsheet_id: str, sheet_name: str) -> 
         return None
     except Exception:
         return None
+
+
+@tool(
+    annotations=ToolAnnotations(
+        title="Count Rows",
+        readOnlyHint=True,
+    ),
+)
+def count_rows(spreadsheet_id: str,
+               sheet: str,
+               ctx: Context = None) -> Dict[str, Any]:
+    """
+    Count the number of rows in a sheet WITHOUT returning the data.
+    Use this instead of get_sheet_data when you only need the row count.
+    This is much cheaper in terms of tokens and avoids context overflow.
+
+    Args:
+        spreadsheet_id: The ID of the spreadsheet
+        sheet: The name of the sheet tab
+
+    Returns:
+        Dictionary with total_rows (excluding header), has_data flag, and header row.
+    """
+    sheets_service = ctx.request_context.lifespan_context.sheets_service
+    values_result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id,
+        range=sheet
+    ).execute()
+    values = values_result.get('values', [])
+    header = values[0] if values else []
+    total_rows = len(values) - 1 if values else 0
+    return {
+        'spreadsheet_id': spreadsheet_id,
+        'sheet': sheet,
+        'total_rows': total_rows,
+        'has_data': total_rows > 0,
+        'header': header,
+    }
 
 
 @tool(
