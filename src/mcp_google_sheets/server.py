@@ -1311,6 +1311,34 @@ def _get_sheet_id(sheets_service: Any, spreadsheet_id: str, sheet_name: str) -> 
 
 @tool(
     annotations=ToolAnnotations(
+        title="Get Sheet ID",
+        readOnlyHint=True,
+    ),
+)
+def get_sheet_id(spreadsheet_id: str,
+                 sheet: str,
+                 ctx: Context = None) -> Dict[str, Any]:
+    """
+    Get the numeric sheet ID for a named sheet tab. This is much cheaper than
+    calling get_sheet_data with include_grid_data=True just to find the sheet ID.
+    Use this when you need the sheetId for batch_update requests (e.g. deleteDimension).
+
+    Args:
+        spreadsheet_id: The ID of the spreadsheet
+        sheet: The name of the sheet tab
+
+    Returns:
+        Dictionary with sheetId (numeric) and title, or an error message.
+    """
+    sheets_service = ctx.request_context.lifespan_context.sheets_service
+    sheet_id = _get_sheet_id(sheets_service, spreadsheet_id, sheet)
+    if sheet_id is not None:
+        return {'sheetId': sheet_id, 'title': sheet}
+    return {'error': f"Sheet '{sheet}' not found in spreadsheet {spreadsheet_id}"}
+
+
+@tool(
+    annotations=ToolAnnotations(
         title="Find Cells",
         readOnlyHint=True,
     ),
